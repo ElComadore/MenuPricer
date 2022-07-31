@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 
 
 def edit_ingredients(main_window, ingredients: dict):
@@ -16,6 +17,8 @@ def edit_ingredients(main_window, ingredients: dict):
                     opt_ingredients['menu'].add_command(label=ent_name.get(),
                                                         command=lambda value=ent_name.get(): option.set(value))
 
+                    tree_ingredients.insert('', index='end', values=(ent_name.get(), ent_price.get()))
+
                     ent_name.delete(first=0, last=len(ent_name.get()))
                     ent_price.delete(first=0, last=len(ent_price.get()))
                 else:
@@ -31,6 +34,12 @@ def edit_ingredients(main_window, ingredients: dict):
                 i = opt_ingredients['menu'].index(option.get())
                 opt_ingredients['menu'].delete(i)
                 lbl_remove['text'] = "Removed " + option.get()
+
+                for child in tree_ingredients.get_children():
+                    if option.get() in tree_ingredients.item(child)['values']:
+                        tree_ingredients.delete(child)
+                        break
+
             else:
                 lbl_remove['text'] = "There's nothing to remove!"
             if len(list(ingredients.keys())) > 0:
@@ -38,8 +47,24 @@ def edit_ingredients(main_window, ingredients: dict):
             else:
                 option.set("Empty")
 
+        frm_buttons = tk.Frame(master=window)
+        frm_catalog = tk.Frame(master=window)
+
+        # The ingredient catalog
+        scr_ingredients = tk.Scrollbar(master=frm_catalog)
+        scr_ingredients.pack(side=tk.RIGHT, fill=tk.Y)
+
+        tree_ingredients = ttk.Treeview(master=frm_catalog, columns=(1, 2), show='headings',
+                                        yscrollcommand=scr_ingredients.set)
+        scr_ingredients.config(command=tree_ingredients.yview)
+
+        tree_ingredients.heading(1, text='Ingredient')
+        tree_ingredients.heading(2, text='Price per kilo')
+
+        tree_ingredients.pack()
+
         # The Adding Item Portion
-        frm_add = tk.Frame(master=window)
+        frm_add = tk.Frame(master=frm_buttons)
         ent_name = tk.Entry(master=frm_add)
         lbl_name = tk.Label(master=frm_add, text="Name of ingredient")
 
@@ -57,7 +82,7 @@ def edit_ingredients(main_window, ingredients: dict):
         lbl_message.grid(row=2, column=1)
 
         # The Removing Item Portion
-        frm_remove = tk.Frame(master=window)
+        frm_remove = tk.Frame(master=frm_buttons)
 
         option = tk.StringVar(master=frm_remove)
         OPTIONS = list(ingredients.keys())
@@ -77,6 +102,9 @@ def edit_ingredients(main_window, ingredients: dict):
         frm_add.grid(row=0, column=0)
         frm_remove.grid(row=0, column=1)
 
+        frm_catalog.grid(row=0, column=0)
+        frm_buttons.grid(row=1, column=0)
+
     in_window = tk.Toplevel(main_window)
     in_window.title("Edit the ingredient list")
     in_window.grab_set()
@@ -88,7 +116,54 @@ def edit_ingredients(main_window, ingredients: dict):
 
 
 def edit_menu_items(main_window):
-    return
+    def setup(window):
+        def add_to_list():
+            return
+
+        def remove_from_list():
+            return
+
+        frm_menu = tk.Frame(master=window)
+        frm_buttons = tk.Frame(master=window)
+
+        # The menu catalog
+        scr_menu_v = tk.Scrollbar(master=frm_menu)
+        scr_menu_v.pack(side=tk.RIGHT, fill=tk.Y)
+        scr_menu_h = tk.Scrollbar(master=frm_menu, orient='horizontal')
+        scr_menu_h.pack(side=tk.BOTTOM, fill=tk.X)
+
+        tree_menu = ttk.Treeview(master=frm_menu, columns=(1, 2, 3, 4), show='headings', yscrollcommand=scr_menu_v.set,
+                                 xscrollcommand=scr_menu_h.set)
+
+        scr_menu_v.config(command=tree_menu.yview)
+        scr_menu_h.config(command=tree_menu.xview)
+
+        tree_menu.heading(1, text='Menu Item')
+        tree_menu.heading(2, text='Base Cost')
+        tree_menu.heading(3, text='Expected Consumption')
+        tree_menu.heading(4, text='Price')
+
+        tree_menu.pack()
+
+        # The Adding Item Portion
+        btn_add = tk.Button(master=frm_buttons, text="Add menu item", command=add_to_list)
+
+        # The Removing Item Portion
+        btn_remove = tk.Button(master=frm_buttons, text="Remove menu item", command=remove_from_list)
+
+        # The Positioning Portion
+        frm_menu.grid(row=0)
+
+        frm_buttons.grid(row=1)
+        btn_add.grid(row=0, column=0)
+        btn_remove.grid(row=0, column=1)
+
+    menu_window = tk.Toplevel(main_window)
+    menu_window.title("Edit the menu")
+    menu_window.grab_set()
+    menu_window.focus_set()
+    setup(menu_window)
+    menu_window.mainloop()
 
 
 def edit_wages(main_window):
@@ -126,31 +201,38 @@ class Ingredient:
 def main_window_setup(main_window: tk.Tk, ingredients: dict, menu: dict, wages):
     # Welcome Frame
     frm_welcome = tk.Frame(master=main_window)
-    lbl_welcome = tk.Label(master=frm_welcome, text="Hello!")
-    lbl_welcome.grid(row=0)
 
+    photo = tk.PhotoImage(file='Hello.png')
+    lbl_welcome = tk.Label(master=frm_welcome, text="Hello!", image=photo, compound='top')
+    lbl_welcome.grid(row=0, sticky='NSEW')
+    lbl_welcome.image = photo
+
+    frm_buttons = tk.Frame(master=main_window)
     # Ingredient button
-    btn_edit_ingredient = tk.Button(master=main_window, text="Edit ingredients",
+    btn_edit_ingredient = tk.Button(master=frm_buttons, text="Show/edit ingredients",
                                     command=lambda: edit_ingredients(main_window, ingredients))
 
     # Menu Item Button
-    btn_edit_menu_item = tk.Button(master=main_window, text="Edit menu items",
+    btn_edit_menu_item = tk.Button(master=frm_buttons, text="Show/edit menu items",
                                    command=lambda: edit_menu_items(main_window))
 
     # Wage Button
-    btn_set_wages = tk.Button(master=main_window, text="Edit wages",
+    btn_set_wages = tk.Button(master=frm_buttons, text="Show/edit wages",
                               command=lambda: edit_wages(main_window))
 
     # Misc Button
-    btn_edit_misc = tk.Button(master=main_window, text="Edit misc",
+    btn_edit_misc = tk.Button(master=frm_buttons, text="Show/edit misc",
                               command=lambda: edit_misc(main_window))
 
     # Positioning
-    frm_welcome.grid(row=0, column=0)
-    btn_edit_ingredient.grid(row=1, column=0)
-    btn_edit_menu_item.grid(row=1, column=1)
-    btn_set_wages.grid(row=1, column=2)
-    btn_edit_misc.grid(row=1, column=3)
+    frm_welcome.grid(row=0, column=0, sticky='NSEW')
+
+    frm_buttons.grid(row=1, column=0)
+
+    btn_edit_ingredient.grid(row=0, column=0, sticky='NSEW')
+    btn_edit_menu_item.grid(row=0, column=1, sticky='NSEW')
+    btn_set_wages.grid(row=0, column=2, sticky='NSEW')
+    btn_edit_misc.grid(row=0, column=3, sticky='NSEW')
 
     return
 
