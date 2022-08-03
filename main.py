@@ -3,14 +3,28 @@ from tkinter import ttk
 
 
 def edit_ingredients(main_window, ingredients: dict):
+    """
+    Changes ingredients from which the MenuItems can be made from
+    :param main_window: the underlying window
+    :param ingredients: the current ingredient list
+    """
+
     def setup(window):
+        """
+        General set-up of the window nad sub functions for adding/removing ingredients
+        :param window: the window we are currently working on
+        """
+
         def add_to_list():
-            lbl_message['text'] = "memes"
+            """
+            Adds an ingredient to the ingredient list
+            """
             if ent_name.get() != "" and ent_price.get != "" and ent_price.get().isnumeric():
                 if ent_name.get() not in ingredients:
-                    if "Empty" in ingredients:
+                    if "Empty" in ingredients:  # There has got to be a better way
                         ingredients.pop("Empty", None)
                         opt_ingredients['menu'].delete(0)
+
                     ingredients[ent_name.get()] = Ingredient(ent_name.get(), ent_price.get())
                     lbl_message['text'] = "Added " + ent_name.get() + " to the list!"
 
@@ -21,7 +35,8 @@ def edit_ingredients(main_window, ingredients: dict):
 
                     ent_name.delete(first=0, last=len(ent_name.get()))
                     ent_price.delete(first=0, last=len(ent_price.get()))
-                else:
+
+                else:                                                      # If user is being stupid
                     lbl_message['text'] = "That's already on the list!"
             elif ent_name.get() == "" or ent_price.get() == "":
                 lbl_message['text'] = "Make sure to fill all the fields!"
@@ -29,7 +44,10 @@ def edit_ingredients(main_window, ingredients: dict):
                 lbl_message['text'] = "Make sure the price is numeric!"
 
         def remove_from_list():
-            if option.get() != "Empty":
+            """
+            Removes the ingredient highlighted in the drop down menu from the ingredient list
+            """
+            if option.get() != "Empty":                         # Again with this bullshit
                 ingredients.pop(option.get(), None)
                 i = opt_ingredients['menu'].index(option.get())
                 opt_ingredients['menu'].delete(i)
@@ -40,7 +58,7 @@ def edit_ingredients(main_window, ingredients: dict):
                         tree_ingredients.delete(child)
                         break
 
-            else:
+            else:                                                       # More user being stupid
                 lbl_remove['text'] = "There's nothing to remove!"
             if len(list(ingredients.keys())) > 0:
                 option.set(list(ingredients.keys())[0])
@@ -61,7 +79,7 @@ def edit_ingredients(main_window, ingredients: dict):
         tree_ingredients.heading(1, text='Ingredient')
         tree_ingredients.heading(2, text='Price per kilo')
 
-        for key in ingredients.keys():
+        for key in ingredients.keys():              # Load in the ingredients already in the list
             if key != 'Empty':
                 tree_ingredients.insert('', 'end', values=(ingredients[key].name, ingredients[key].price))
 
@@ -120,8 +138,18 @@ def edit_ingredients(main_window, ingredients: dict):
 
 
 def edit_menu_items(main_window, ingredients: dict, menu: dict):
+    """
+    Changes the items on the menu
+    :param main_window: the base window of the program
+    :param ingredients: the currently available ingredients
+    :param menu: the base window for the program
+    """
     def setup(window):
         def add_to_list(w):
+            """
+            Opens a pop-up from which to create a recipe
+            :param w: the window containing the menu list
+            """
             def add_ingredient():
                 if option.get() != "None" and ent_ingredient_amount.get() != "" and ent_ingredient_amount.get().isnumeric():
                     tree_recipe.insert('', index='end', values=(option.get(), ent_ingredient_amount.get()))
@@ -151,7 +179,9 @@ def edit_menu_items(main_window, ingredients: dict, menu: dict):
                                                            float(ent_recipe_amount.get()),
                                                            price=0)
                     add_win.grab_release()
-                    tree_menu.insert('', index='end', values=(ent_recipe_name.get(), base_cost, ent_recipe_amount.get(), 0))
+                    tree_menu.insert('', index='end',
+                                     values=(ent_recipe_name.get(), base_cost, ent_recipe_amount.get(), 0))
+
                     add_win.destroy()
                 return
 
@@ -179,7 +209,7 @@ def edit_menu_items(main_window, ingredients: dict, menu: dict):
             lbl_ingredient_opt = tk.Label(master=frm_recipe_buttons, text="Ingredient")
             OPTIONS = list(ingredients.keys())
             option = tk.StringVar(master=frm_recipe_buttons)
-            option.set("None")
+            option.set("-")
             opt_ingredients = tk.OptionMenu(frm_recipe_buttons, option, *OPTIONS)
 
             lbl_ingredient_amount = tk.Label(master=frm_recipe_buttons, text="Amount (kg)")
@@ -200,8 +230,6 @@ def edit_menu_items(main_window, ingredients: dict, menu: dict):
             btn_recipe_remove.grid(row=3, column=1)
 
             # Saving recipe
-            lbl_empty = tk.Label(master=frm_recipe_buttons, text="    ")
-
             lbl_recipe_name = tk.Label(master=frm_recipe_buttons, text="Recipe name")
             ent_recipe_name = tk.Entry(master=frm_recipe_buttons)
 
@@ -210,12 +238,11 @@ def edit_menu_items(main_window, ingredients: dict, menu: dict):
 
             btn_recipe_save = tk.Button(master=frm_recipe_buttons, text="Save to menu", command=save_recipe)
 
-            lbl_empty.grid(row=2, column=2)
-            lbl_recipe_name.grid(row=1, column=3)
-            ent_recipe_name.grid(row=1, column=4)
-            lbl_recipe_amount.grid(row=2, column=3)
-            ent_recipe_amount.grid(row=2, column=4)
-            btn_recipe_save.grid(row=3, column=4)
+            lbl_recipe_name.grid(row=1, column=2)
+            ent_recipe_name.grid(row=1, column=3)
+            lbl_recipe_amount.grid(row=2, column=2)
+            ent_recipe_amount.grid(row=2, column=3)
+            btn_recipe_save.grid(row=3, column=3)
 
             # Positioning frames
             frm_recipe.grid(row=0, column=0)
@@ -223,7 +250,134 @@ def edit_menu_items(main_window, ingredients: dict, menu: dict):
 
             add_win.mainloop()
 
-        def remove_from_list(w):
+        def edit_menu_item(w):  # This has too much in common with the preceding function
+            recipe_name = None
+
+            if tree_menu.focus() != '':
+                recipe_name = tree_menu.item(tree_menu.focus())['values'][0]    # Making sure we actually have something
+
+            else:
+                return
+
+            def fill_out_table(menu_item):          # Parsing the recipe
+                for i in menu_item.ingredients:
+                    tree_recipe.insert('', index='end', values=(i[0].name, i[1]))
+                return
+
+            def add_ingredient():
+                if option.get() != "None" and ent_ingredient_amount.get() != "" and ent_ingredient_amount.get().isnumeric():
+                    tree_recipe.insert('', index='end', values=(option.get(), ent_ingredient_amount.get()))
+
+                    ent_ingredient_amount.delete(0, len(ent_ingredient_amount.get()))
+                return
+
+            def remove_ingredient():
+                if option.get() != "None" and len(tree_recipe.get_children()) > 0:
+                    for child in tree_recipe.get_children():
+                        if option.get() in tree_recipe.item(child)['values']:
+                            tree_recipe.delete(child)
+                return
+
+            def save_recipe():
+                if ent_recipe_name != '' and ent_recipe_amount != '' and ent_recipe_amount.get().isnumeric():
+                    menu.pop(recipe_name, None)
+                    tree_menu.delete(tree_menu.focus())
+
+                    atoms = list()
+                    base_cost = 0
+
+                    for child in tree_recipe.get_children():
+                        atoms.append((ingredients[tree_recipe.item(child)['values'][0]],
+                                      tree_recipe.item(child)['values'][1]))
+                        base_cost += float(atoms[-1][0].price) * atoms[-1][1]
+
+                    menu[ent_recipe_name.get()] = MenuItem(ent_recipe_name.get(),
+                                                           atoms,
+                                                           float(ent_recipe_amount.get()),
+                                                           price=0)
+                    edit_win.grab_release()
+                    tree_menu.insert('', index='end',
+                                     values=(ent_recipe_name.get(), base_cost, ent_recipe_amount.get(), 0))
+
+                    edit_win.destroy()
+                return
+
+            edit_win = tk.Toplevel(w)
+            edit_win.title('Edit a menu item')
+            edit_win.grab_set()
+            edit_win.focus_set()
+
+            frm_recipe = tk.Frame(master=edit_win)
+            frm_recipe_buttons = tk.Frame(master=edit_win)
+
+            # The recipe table
+            scr_recipe = tk.Scrollbar(master=frm_recipe)
+            scr_recipe.pack(side=tk.RIGHT, fill=tk.Y)
+
+            tree_recipe = ttk.Treeview(master=frm_recipe, columns=(1, 2), show='headings',
+                                       yscrollcommand=scr_recipe.set)
+            tree_recipe.heading(1, text="Ingredient")
+            tree_recipe.heading(2, text="Amount (kg)")
+
+            scr_recipe.config(command=tree_recipe.yview)
+            tree_recipe.pack()
+            fill_out_table(menu[recipe_name])
+
+            # Adding ingredients
+            lbl_ingredient_opt = tk.Label(master=frm_recipe_buttons, text="Ingredient")
+            OPTIONS = list(ingredients.keys())
+            option = tk.StringVar(master=frm_recipe_buttons)
+            option.set("-")
+            opt_ingredients = tk.OptionMenu(frm_recipe_buttons, option, *OPTIONS)
+
+            lbl_ingredient_amount = tk.Label(master=frm_recipe_buttons, text="Amount (kg)")
+            ent_ingredient_amount = tk.Entry(master=frm_recipe_buttons)
+
+            btn_recipe_add = tk.Button(master=frm_recipe_buttons, text='Add ingredient', command=add_ingredient)
+
+            lbl_ingredient_opt.grid(row=0, column=0)
+            opt_ingredients.grid(row=1, column=0)
+            lbl_ingredient_amount.grid(row=0, column=1)
+            ent_ingredient_amount.grid(row=1, column=1)
+            btn_recipe_add.grid(row=2, column=1)
+
+            # Removing ingredients
+            btn_recipe_remove = tk.Button(master=frm_recipe_buttons, text="Remove ingredient",
+                                          command=remove_ingredient)
+
+            btn_recipe_remove.grid(row=3, column=1)
+
+            # Saving recipe
+            lbl_recipe_name = tk.Label(master=frm_recipe_buttons, text="Recipe name")
+            ent_recipe_name = tk.Entry(master=frm_recipe_buttons)
+            ent_recipe_name.insert(0, recipe_name)
+
+            lbl_recipe_amount = tk.Label(master=frm_recipe_buttons, text="Expected amount")
+            ent_recipe_amount = tk.Entry(master=frm_recipe_buttons)
+            ent_recipe_amount.insert(0, menu[recipe_name].served)
+
+            btn_recipe_save = tk.Button(master=frm_recipe_buttons, text="Save to menu", command=save_recipe)
+
+            lbl_recipe_name.grid(row=1, column=2)
+            ent_recipe_name.grid(row=1, column=3)
+            lbl_recipe_amount.grid(row=2, column=2)
+            ent_recipe_amount.grid(row=2, column=3)
+            btn_recipe_save.grid(row=3, column=3)
+
+            # Positioning frames
+            frm_recipe.grid(row=0, column=0)
+            frm_recipe_buttons.grid(row=1, column=0)
+
+            edit_win.mainloop()
+
+        def remove_from_list():
+            if tree_menu.focus() != '':
+                recipe_name = tree_menu.item(tree_menu.focus())['values'][0]
+            else:
+                return
+
+            menu.pop(recipe_name, None)
+            tree_menu.delete(tree_menu.focus())
             return
 
         frm_menu = tk.Frame(master=window)
@@ -248,18 +402,27 @@ def edit_menu_items(main_window, ingredients: dict, menu: dict):
 
         tree_menu.pack()
 
+        if "empty" not in menu.keys():
+            for key in menu.keys():
+                tree_menu.insert('', index='end', values=(menu[key].name, menu[key].base_cost, menu[key].served,
+                                                          menu[key].price))
+
         # The Adding Item Portion
         btn_add = tk.Button(master=frm_buttons, text="Add menu item", command=lambda: add_to_list(window))
 
+        # The Editing Item Portion
+        btn_edit = tk.Button(master=frm_buttons, text="Edit menu item", command=lambda: edit_menu_item(window))
+
         # The Removing Item Portion
-        btn_remove = tk.Button(master=frm_buttons, text="Remove menu item", command=lambda: remove_from_list(window))
+        btn_remove = tk.Button(master=frm_buttons, text="Remove menu item", command=remove_from_list)
 
         # The Positioning Portion
         frm_menu.grid(row=0)
 
         frm_buttons.grid(row=1)
         btn_add.grid(row=0, column=0)
-        btn_remove.grid(row=0, column=1)
+        btn_remove.grid(row=0, column=2)
+        btn_edit.grid(row=0, column=1)
 
     menu_window = tk.Toplevel(main_window)
     menu_window.title("Edit the menu")
@@ -290,7 +453,7 @@ class MenuItem:
 
         self.base_cost = 0
         for i in range(0, len(self.ingredients)):
-            self.base_cost += float(self.ingredients[i][0].price)*float(self.ingredients[i][1])
+            self.base_cost += float(self.ingredients[i][0].price) * float(self.ingredients[i][1])
         return
 
 
@@ -341,8 +504,9 @@ def main_window_setup(main_window: tk.Tk, ingredients: dict, menu: dict, wages):
 
 
 def main():
-    ingredients = {"Empty": None}
-    menu = {"Empty": None}
+    ingredients = {"q": Ingredient('q', 2), "b": Ingredient("b", 3)}
+    ppp = (ingredients['q'], 4)
+    menu = {"asdf": MenuItem("asdf", [ppp], 5)}
     wages = 0
 
     main_window = tk.Tk()
